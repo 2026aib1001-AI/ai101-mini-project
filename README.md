@@ -194,3 +194,17 @@ While our linear regression model achieves a solid baseline ($R^2 \approx 0.54$,
 - **Data Manipulation**: `pandas`, `numpy`
 - **Machine Learning**: `scikit-learn` (`Pipeline`, `ColumnTransformer`, `StandardScaler`, `OneHotEncoder`, `LinearRegression`)
 - **Data Visualization**: `matplotlib`
+
+---
+
+## 👥 Project Team
+
+Developed as part of the **AI101: Data Science and AI Essentials with Python** course at **IIT Ropar**:
+
+| # | Team Member | Entry Number | Role & Responsibilities |
+| :---: | :--- | :---: | :--- |
+| 1 | **Siddharth Kumar** | `2026DAB1307` | **Execution & Setup Lead** |
+| 2 | **Nihal Ahirwar** | `2026EEB1385` | **Data Analyst & Documentation Lead** |
+| 3 | **Divyaans Agarwal** | `2026MCB1696` | **Integration & Video Lead** |
+| 4 | **A Damaruk Vajra Tej** | `2026AIB1001` | **Evaluation & PPT Lead** |
+
