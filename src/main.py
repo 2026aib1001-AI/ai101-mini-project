@@ -33,9 +33,9 @@ def load_and_clean_data(data_path: Path) -> pd.DataFrame:
     if not data_path.exists():
         raise FileNotFoundError(f"Dataset not found at {data_path}")
 
-    print("=" * 60)
-    print("   USED CAR PRICE PREDICTION - PIPELINE EXECUTION")
-    print("=" * 60)
+    print("=" * 65)
+    print("      USED CAR PRICE PREDICTION - PIPELINE EXECUTION")
+    print("=" * 65)
     print("\n[1/5] Loading and cleaning dataset...")
 
     df = pd.read_csv(data_path)
@@ -143,48 +143,55 @@ def build_and_train_model(X_train: pd.DataFrame, y_train: pd.Series, numeric_fea
     }).sort_values(by="Coefficient", ascending=False).reset_index(drop=True)
 
     print(f"      Base Intercept: ₹{intercept:,.2f}")
-    print(f"      Top Positive Driver: {coef_df.iloc[0]['Feature']} (+₹{coef_df.iloc[0]['Coefficient']:,.2f})")
-    print(f"      Top Negative Driver: {coef_df.iloc[-1]['Feature']} (₹{coef_df.iloc[-1]['Coefficient']:,.2f})")
 
     return model, encoded_feature_names, coef_df
 
 
 def evaluate_model(model: Pipeline, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series):
     """
-    Generate test set predictions and calculate standard regression evaluation metrics.
+    Generate predictions and calculate regression metrics for both Training and Testing sets.
     """
-    print("\n" + "=" * 60)
-    print("             MODEL EVALUATION METRICS (TEST SET)             ")
-    print("=" * 60)
+    print("\n" + "=" * 65)
+    print("             MODEL EVALUATION METRICS (TRAIN VS. TEST)             ")
+    print("=" * 65)
 
-    y_pred = model.predict(X_test)
+    # Predictions
+    y_train_pred = model.predict(X_train)
+    y_test_pred = model.predict(X_test)
 
-    # Compute metrics
-    r2_train = model.score(X_train, y_train)
-    r2_test = r2_score(y_test, y_pred)
-    mae = mean_absolute_error(y_test, y_pred)
-    mse = mean_squared_error(y_test, y_pred)
-    rmse = np.sqrt(mse)
+    # Training Metrics
+    r2_train = r2_score(y_train, y_train_pred)
+    mae_train = mean_absolute_error(y_train, y_train_pred)
+    mse_train = mean_squared_error(y_train, y_train_pred)
+    rmse_train = np.sqrt(mse_train)
 
-    print(f"Training R² Score          : {r2_train:.4f}")
-    print(f"Testing R² Score           : {r2_test:.4f}")
-    print(f"Mean Absolute Error (MAE)  : ₹{mae:,.2f}")
-    print(f"Mean Squared Error (MSE)   : {mse:,.2f}")
-    print(f"Root Mean Squared Error    : ₹{rmse:,.2f}")
-    print("=" * 60)
+    # Testing Metrics
+    r2_test = r2_score(y_test, y_test_pred)
+    mae_test = mean_absolute_error(y_test, y_test_pred)
+    mse_test = mean_squared_error(y_test, y_test_pred)
+    rmse_test = np.sqrt(mse_test)
 
-    return y_pred, {
-        "r2_train": r2_train,
-        "r2_test": r2_test,
-        "mae": mae,
-        "mse": mse,
-        "rmse": rmse
+    # Formatted display table
+    print(f"{'Metric':<28} | {'Training Set':<16} | {'Testing Set':<16}")
+    print("-" * 65)
+    print(f"{'R² Score (Variance Exp.)':<28} | {r2_train:<16.4f} | {r2_test:<16.4f}")
+    print(f"{'Mean Absolute Error (MAE)':<28} | ₹{mae_train:<15,.2f} | ₹{mae_test:<15,.2f}")
+    print(f"{'Mean Squared Error (MSE)':<28} | {mse_train:<16,.2f} | {mse_test:<16,.2f}")
+    print(f"{'Root Mean Squared Error':<28} | ₹{rmse_train:<15,.2f} | ₹{rmse_test:<15,.2f}")
+    print("=" * 65)
+
+    metrics = {
+        "train": {"r2": r2_train, "mae": mae_train, "mse": mse_train, "rmse": rmse_train},
+        "test": {"r2": r2_test, "mae": mae_test, "mse": mse_test, "rmse": rmse_test}
     }
+
+    return y_test_pred, metrics
 
 
 def save_plots(y_test: pd.Series, y_pred: np.ndarray, coef_df: pd.DataFrame, output_dir: Path):
     """
     Generate and save diagnostic evaluation plots in the output directory.
+    Decomposes coefficients into Brand, Numeric, and Categorical plots.
     """
     output_dir.mkdir(parents=True, exist_ok=True)
     print(f"\nSaving visualization plots to: {output_dir}")
@@ -195,9 +202,9 @@ def save_plots(y_test: pd.Series, y_pred: np.ndarray, coef_df: pd.DataFrame, out
     low = min(float(np.min(y_test)), float(np.min(y_pred))) / 100000
     high = max(float(np.max(y_test)), float(np.max(y_pred))) / 100000
     plt.plot([low, high], [low, high], color="red", linestyle="--", linewidth=2, label="Perfect Prediction (y = x)")
-    plt.title("Actual vs. Predicted Selling Price (Test Set)")
-    plt.xlabel("Actual Selling Price (Lakhs ₹)")
-    plt.ylabel("Predicted Selling Price (Lakhs ₹)")
+    plt.title("Actual vs. Predicted Selling Price (Test Set)", fontsize=13, fontweight="bold")
+    plt.xlabel("Actual Selling Price (Lakhs ₹)", fontsize=11)
+    plt.ylabel("Predicted Selling Price (Lakhs ₹)", fontsize=11)
     plt.legend()
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.tight_layout()
@@ -211,9 +218,9 @@ def save_plots(y_test: pd.Series, y_pred: np.ndarray, coef_df: pd.DataFrame, out
     plt.figure(figsize=(8, 6))
     plt.hist(residuals, bins=35, color="coral", edgecolor="black", alpha=0.7)
     plt.axvline(0, color="black", linestyle="--", linewidth=1.5, label="Zero Error")
-    plt.title("Residual Error Distribution (Actual - Predicted)")
-    plt.xlabel("Error (Lakhs ₹)")
-    plt.ylabel("Frequency")
+    plt.title("Residual Error Distribution (Actual - Predicted)", fontsize=13, fontweight="bold")
+    plt.xlabel("Prediction Error (Lakhs ₹)", fontsize=11)
+    plt.ylabel("Frequency", fontsize=11)
     plt.legend()
     plt.grid(True, linestyle="--", alpha=0.5)
     plt.tight_layout()
@@ -222,23 +229,82 @@ def save_plots(y_test: pd.Series, y_pred: np.ndarray, coef_df: pd.DataFrame, out
     plt.close()
     print(f"  [+] Saved: {residual_path.name}")
 
-    # 3. Top Feature Coefficients Bar Chart
-    top_pos = coef_df.head(6)
-    top_neg = coef_df.tail(6)
-    plot_df = pd.concat([top_pos, top_neg]).sort_values("Coefficient")
+    # 3. Plot A: Brand-wise Coefficients (All 27 Brands)
+    brand_df = coef_df[coef_df["Feature"].str.startswith("cat__brand_")].copy()
+    brand_df["Brand_Name"] = brand_df["Feature"].str.replace("cat__brand_", "")
+    brand_df = brand_df.sort_values(by="Coefficient", ascending=True)
 
-    plt.figure(figsize=(10, 6))
-    colors = ["crimson" if c < 0 else "forestgreen" for c in plot_df["Coefficient"]]
-    plt.barh(plot_df["Feature"], plot_df["Coefficient"] / 100000, color=colors, edgecolor="black")
-    plt.axvline(0, color="black", linewidth=1)
-    plt.title("Top Feature Coefficients (Impact on Price in Lakhs ₹)")
-    plt.xlabel("Coefficient Value (Lakhs ₹)")
+    plt.figure(figsize=(10, 8))
+    colors = ["forestgreen" if c >= 0 else "crimson" for c in brand_df["Coefficient"]]
+    plt.barh(brand_df["Brand_Name"], brand_df["Coefficient"] / 100000, color=colors, edgecolor="black", alpha=0.85)
+    plt.axvline(0, color="black", linewidth=1.2)
+    plt.title("Brand Equity Coefficients (Relative Price Impact in Lakhs ₹)", fontsize=13, fontweight="bold")
+    plt.xlabel("Price Impact (Lakhs ₹)", fontsize=11)
+    plt.ylabel("Car Brand", fontsize=11)
     plt.grid(axis="x", linestyle="--", alpha=0.5)
     plt.tight_layout()
-    coef_path = output_dir / "feature_coefficients.png"
-    plt.savefig(coef_path, dpi=300)
+    brand_path = output_dir / "brand_coefficients.png"
+    plt.savefig(brand_path, dpi=300)
     plt.close()
-    print(f"  [+] Saved: {coef_path.name}")
+    print(f"  [+] Saved: {brand_path.name}")
+
+    # 4. Plot B: Numeric Features (Age vs. Km Driven Depreciation)
+    numeric_df = coef_df[coef_df["Feature"].str.startswith("num__")].copy()
+    name_map = {
+        "num__age": "Vehicle Age\n(per +1 Std Dev ~ 4.2 yrs)",
+        "num__km_driven": "Kilometers Driven\n(per +1 Std Dev ~ 44k km)"
+    }
+    numeric_df["Clean_Name"] = numeric_df["Feature"].map(name_map)
+    numeric_df = numeric_df.sort_values(by="Coefficient", ascending=True)
+
+    plt.figure(figsize=(7, 5))
+    bars = plt.bar(numeric_df["Clean_Name"], numeric_df["Coefficient"] / 100000, color=["firebrick", "indianred"], edgecolor="black", width=0.45)
+    plt.axhline(0, color="black", linewidth=1)
+    plt.title("Continuous Feature Coefficients: Rate of Depreciation", fontsize=13, fontweight="bold")
+    plt.ylabel("Price Impact (Lakhs ₹ per Std Dev)", fontsize=11)
+    plt.grid(axis="y", linestyle="--", alpha=0.5)
+
+    for bar in bars:
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2, height - 0.12, f"₹{height:.2f}L", ha="center", va="top", fontweight="bold", color="white")
+
+    plt.tight_layout()
+    numeric_path = output_dir / "numeric_coefficients.png"
+    plt.savefig(numeric_path, dpi=300)
+    plt.close()
+    print(f"  [+] Saved: {numeric_path.name}")
+
+    # 5. Plot C: Categorical Specifications (Transmission, Fuel, Owner, Seller)
+    fig, axes = plt.subplots(2, 2, figsize=(14, 10))
+
+    specs = [
+        ("Transmission", "cat__transmission_", axes[0, 0], "mediumpurple"),
+        ("Fuel Type", "cat__fuel_", axes[0, 1], "darkcyan"),
+        ("Owner History", "cat__owner_", axes[1, 0], "goldenrod"),
+        ("Seller Type", "cat__seller_type_", axes[1, 1], "steelblue"),
+    ]
+
+    for title, prefix, ax, color in specs:
+        sub_df = coef_df[coef_df["Feature"].str.startswith(prefix)].copy()
+        sub_df["Label"] = sub_df["Feature"].str.replace(prefix, "")
+        sub_df = sub_df.sort_values(by="Coefficient", ascending=True)
+        ax.barh(sub_df["Label"], sub_df["Coefficient"] / 100000, color=color, edgecolor="black", alpha=0.85)
+        ax.axvline(0, color="black", linewidth=1)
+        ax.set_title(f"{title} Coefficients", fontsize=11, fontweight="bold")
+        ax.set_xlabel("Impact (Lakhs ₹)")
+        ax.grid(axis="x", linestyle="--", alpha=0.5)
+
+    plt.suptitle("Vehicle Specification Categorical Coefficients (Impact in Lakhs ₹)", fontsize=14, fontweight="bold")
+    plt.tight_layout()
+    cat_path = output_dir / "categorical_coefficients.png"
+    plt.savefig(cat_path, dpi=300)
+    plt.close()
+    print(f"  [+] Saved: {cat_path.name}")
+
+    # Clean up obsolete single feature_coefficients.png if present
+    old_coef_file = output_dir / "feature_coefficients.png"
+    if old_coef_file.exists():
+        old_coef_file.unlink()
 
 
 def main():
@@ -259,15 +325,15 @@ def main():
         X_train, y_train, numeric_features, categorical_features
     )
 
-    # 6. Evaluate model on test set
+    # 6. Evaluate model on test set (with both train & test metrics)
     y_pred, metrics = evaluate_model(model, X_train, y_train, X_test, y_test)
 
     # 7. Save output plots
     save_plots(y_test, y_pred, coef_df, OUTPUT_DIR)
 
-    print("\n" + "=" * 60)
+    print("\n" + "=" * 65)
     print("Pipeline execution and visualization completed successfully!")
-    print("=" * 60)
+    print("=" * 65)
 
 
 if __name__ == "__main__":
