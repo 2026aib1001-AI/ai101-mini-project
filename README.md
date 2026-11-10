@@ -163,6 +163,32 @@ Subplots detailing how specific mechanical and ownership features influence valu
 
 ---
 
+## 🔬 Limitations & Future Scope (Undergrad Research Notes)
+
+While our linear regression model achieves a solid baseline ($R^2 \approx 0.54$, Test MAE ₹1.79L), analyzing the residual errors revealed a few clear ways this project could be improved:
+
+1. **Target Log-Transformation ($\log(\text{price})$)**:
+   - *Observation:* Car prices in this dataset range from ₹35,000 to ₹89 Lakhs. A ₹2 Lakh error on an ₹80L BMW is negligible (2.5%), but that same ₹2 Lakh error on a ₹1.5L Maruti completely ruins the prediction.
+   - *Improvement:* Training on $\ln(\text{price})$ instead of raw Rupees would optimize for relative percentage error, treating budget and luxury cars with equal fairness.
+
+2. **Non-Linear Depreciation Curves (Tree Models)**:
+   - *Observation:* Linear regression assumes a car loses the exact same rupee value every single year. In reality, cars lose value rapidly in years 1–3, but the depreciation curve flattens out after year 7 or 8.
+   - *Improvement:* Testing **Random Forest** or **Decision Tree Regressors** would capture this natural decay curve without requiring complex polynomial features.
+
+3. **Driving Intensity Feature ($\text{km} / \text{age}$)**:
+   - *Observation:* A 6-year-old car with 60,000 km is a normal family car (10,000 km/yr). A 2-year-old car with 60,000 km was probably driven hard as a commercial taxi (30,000 km/yr). Currently, our model only sees "60,000 km" and cannot tell them apart.
+   - *Improvement:* Adding an engineered feature like `km_per_year = km_driven / (age + 1)` would directly flag heavily used fleet vehicles.
+
+4. **Grouping Rare Brands into Tiers**:
+   - *Observation:* We currently create 27 one-hot encoded brand columns, but brands like *Force*, *Daewoo*, or *Ambassador* appear only 1 to 3 times in the entire dataset.
+   - *Improvement:* Grouping brands into simple tiers (*Luxury*, *Mid-Range*, *Budget*) would reduce column clutter and make predictions for rare brands much more reliable.
+
+5. **Extracting Engine Size & Trim from Car Name**:
+   - *Observation:* We dropped the `name` column because 1,491 distinct car names caused overfitting. But strings like *"Verna 1.6 SX"* or *"Swift VDI"* contain engine size (1.6L vs 1.2L) and top-end trim info that buyers pay extra for.
+   - *Improvement:* Using basic string splitting or regex to pull out engine displacement (`cc`) and trim levels into separate numeric features.
+
+---
+
 ## 🛠️ Tech Stack & Requirements
 - **Language**: Python 3.9+
 - **Data Manipulation**: `pandas`, `numpy`

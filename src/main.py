@@ -262,11 +262,13 @@ def save_plots(y_test: pd.Series, y_pred: np.ndarray, coef_df: pd.DataFrame, out
     plt.axhline(0, color="black", linewidth=1)
     plt.title("Continuous Feature Coefficients: Rate of Depreciation", fontsize=13, fontweight="bold")
     plt.ylabel("Price Impact (Lakhs ₹ per Std Dev)", fontsize=11)
+    plt.ylim(-2.0, 0.2)
     plt.grid(axis="y", linestyle="--", alpha=0.5)
 
     for bar in bars:
         height = bar.get_height()
-        plt.text(bar.get_x() + bar.get_width() / 2, height - 0.12, f"₹{height:.2f}L", ha="center", va="top", fontweight="bold", color="white")
+        # Center value text cleanly inside the bar to prevent collision with axis labels
+        plt.text(bar.get_x() + bar.get_width() / 2, height / 2, f"₹{height:.2f}L", ha="center", va="center", fontweight="bold", color="white", fontsize=11)
 
     plt.tight_layout()
     numeric_path = output_dir / "numeric_coefficients.png"
