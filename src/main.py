@@ -9,6 +9,9 @@ feature selection, model training, evaluation, and plot generation.
 import os
 import sys
 from pathlib import Path
+import matplotlib
+matplotlib.use("Agg")  # Headless backend for command-line / server execution
+import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
 from sklearn.model_selection import train_test_split
@@ -17,6 +20,7 @@ from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 # Project directory paths
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -142,7 +146,99 @@ def build_and_train_model(X_train: pd.DataFrame, y_train: pd.Series, numeric_fea
     print(f"      Top Positive Driver: {coef_df.iloc[0]['Feature']} (+₹{coef_df.iloc[0]['Coefficient']:,.2f})")
     print(f"      Top Negative Driver: {coef_df.iloc[-1]['Feature']} (₹{coef_df.iloc[-1]['Coefficient']:,.2f})")
 
-    return model, encoded_feature_names
+    return model, encoded_feature_names, coef_df
+
+
+def evaluate_model(model: Pipeline, X_train: pd.DataFrame, y_train: pd.Series, X_test: pd.DataFrame, y_test: pd.Series):
+    """
+    Generate test set predictions and calculate standard regression evaluation metrics.
+    """
+    print("\n" + "=" * 60)
+    print("             MODEL EVALUATION METRICS (TEST SET)             ")
+    print("=" * 60)
+
+    y_pred = model.predict(X_test)
+
+    # Compute metrics
+    r2_train = model.score(X_train, y_train)
+    r2_test = r2_score(y_test, y_pred)
+    mae = mean_absolute_error(y_test, y_pred)
+    mse = mean_squared_error(y_test, y_pred)
+    rmse = np.sqrt(mse)
+
+    print(f"Training R² Score          : {r2_train:.4f}")
+    print(f"Testing R² Score           : {r2_test:.4f}")
+    print(f"Mean Absolute Error (MAE)  : ₹{mae:,.2f}")
+    print(f"Mean Squared Error (MSE)   : {mse:,.2f}")
+    print(f"Root Mean Squared Error    : ₹{rmse:,.2f}")
+    print("=" * 60)
+
+    return y_pred, {
+        "r2_train": r2_train,
+        "r2_test": r2_test,
+        "mae": mae,
+        "mse": mse,
+        "rmse": rmse
+    }
+
+
+def save_plots(y_test: pd.Series, y_pred: np.ndarray, coef_df: pd.DataFrame, output_dir: Path):
+    """
+    Generate and save diagnostic evaluation plots in the output directory.
+    """
+    output_dir.mkdir(parents=True, exist_ok=True)
+    print(f"\nSaving visualization plots to: {output_dir}")
+
+    # 1. Actual vs. Predicted Scatter Plot
+    plt.figure(figsize=(8, 6))
+    plt.scatter(y_test / 100000, y_pred / 100000, alpha=0.6, color="royalblue", edgecolor="black")
+    low = min(float(np.min(y_test)), float(np.min(y_pred))) / 100000
+    high = max(float(np.max(y_test)), float(np.max(y_pred))) / 100000
+    plt.plot([low, high], [low, high], color="red", linestyle="--", linewidth=2, label="Perfect Prediction (y = x)")
+    plt.title("Actual vs. Predicted Selling Price (Test Set)")
+    plt.xlabel("Actual Selling Price (Lakhs ₹)")
+    plt.ylabel("Predicted Selling Price (Lakhs ₹)")
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    actual_pred_path = output_dir / "actual_vs_predicted.png"
+    plt.savefig(actual_pred_path, dpi=300)
+    plt.close()
+    print(f"  [+] Saved: {actual_pred_path.name}")
+
+    # 2. Residual Distribution Histogram
+    residuals = (y_test.to_numpy() - y_pred) / 100000
+    plt.figure(figsize=(8, 6))
+    plt.hist(residuals, bins=35, color="coral", edgecolor="black", alpha=0.7)
+    plt.axvline(0, color="black", linestyle="--", linewidth=1.5, label="Zero Error")
+    plt.title("Residual Error Distribution (Actual - Predicted)")
+    plt.xlabel("Error (Lakhs ₹)")
+    plt.ylabel("Frequency")
+    plt.legend()
+    plt.grid(True, linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    residual_path = output_dir / "residual_distribution.png"
+    plt.savefig(residual_path, dpi=300)
+    plt.close()
+    print(f"  [+] Saved: {residual_path.name}")
+
+    # 3. Top Feature Coefficients Bar Chart
+    top_pos = coef_df.head(6)
+    top_neg = coef_df.tail(6)
+    plot_df = pd.concat([top_pos, top_neg]).sort_values("Coefficient")
+
+    plt.figure(figsize=(10, 6))
+    colors = ["crimson" if c < 0 else "forestgreen" for c in plot_df["Coefficient"]]
+    plt.barh(plot_df["Feature"], plot_df["Coefficient"] / 100000, color=colors, edgecolor="black")
+    plt.axvline(0, color="black", linewidth=1)
+    plt.title("Top Feature Coefficients (Impact on Price in Lakhs ₹)")
+    plt.xlabel("Coefficient Value (Lakhs ₹)")
+    plt.grid(axis="x", linestyle="--", alpha=0.5)
+    plt.tight_layout()
+    coef_path = output_dir / "feature_coefficients.png"
+    plt.savefig(coef_path, dpi=300)
+    plt.close()
+    print(f"  [+] Saved: {coef_path.name}")
 
 
 def main():
@@ -159,12 +255,19 @@ def main():
     X_train, X_test, y_train, y_test = split_dataset(X, y)
 
     # 5. Build pipeline and train Linear Regression model
-    model, encoded_feature_names = build_and_train_model(
+    model, encoded_feature_names, coef_df = build_and_train_model(
         X_train, y_train, numeric_features, categorical_features
     )
 
-    print("\n[Status] Data preprocessing, feature scaling/encoding, and model training complete.")
-    print("         Final step remaining: Test set evaluation and saving plot outputs.")
+    # 6. Evaluate model on test set
+    y_pred, metrics = evaluate_model(model, X_train, y_train, X_test, y_test)
+
+    # 7. Save output plots
+    save_plots(y_test, y_pred, coef_df, OUTPUT_DIR)
+
+    print("\n" + "=" * 60)
+    print("Pipeline execution and visualization completed successfully!")
+    print("=" * 60)
 
 
 if __name__ == "__main__":
