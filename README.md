@@ -44,9 +44,13 @@ cd ai101-mini-project
 
 ### 2. Set Up Virtual Environment (Recommended)
 ```bash
+# On macOS / Linux:
 python3 -m venv .venv
-source .venv/bin/activate      # On macOS/Linux
-# .venv\Scripts\activate       # On Windows
+source .venv/bin/activate
+
+# On Windows (PowerShell / Command Prompt):
+python -m venv .venv
+.venv\Scripts\activate
 ```
 
 ### 3. Install Dependencies

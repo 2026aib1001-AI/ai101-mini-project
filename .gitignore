@@ -230,3 +230,5 @@ __marimo__/
 refrences/
 references/
 
+# Presentation Script files
+PRESENTATION_SCRIPT.*
