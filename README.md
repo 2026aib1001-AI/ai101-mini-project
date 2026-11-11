@@ -3,6 +3,10 @@
 > **AI101: Data Science and AI Essentials with Python — Mini-Project**  
 > **Indian Institute of Technology Ropar (IIT Ropar)**
 
+[![Watch Video Presentation](https://img.shields.io/badge/Video_Presentation-Google_Drive-FF8800?style=for-the-badge&logo=googledrive&logoColor=white)](https://drive.google.com/drive/folders/1I1P9NeZhjE-dGwPRrYZN6H3YxopeLJsu?usp=sharing)
+[![View Slides (PDF)](https://img.shields.io/badge/Presentation_Deck-PDF-007ACC?style=for-the-badge&logo=adobeacrobatreader&logoColor=white)](presentation/Group8_AI101_Final_Presentation.pdf)
+[![View Slides (PPTX)](https://img.shields.io/badge/Presentation_Deck-PPTX-D24726?style=for-the-badge&logo=microsoftpowerpoint&logoColor=white)](presentation/Group8_AI101_Final_Presentation.pptx)
+
 ---
 
 ## 📌 Project Overview
@@ -24,6 +28,9 @@ ai101-mini-project/
 │   ├── brand_coefficients.png              # Brand equity valuation coefficients
 │   ├── numeric_coefficients.png            # Age & mileage depreciation coefficients
 │   └── categorical_coefficients.png        # Transmission, Fuel, Owner, Seller subplots
+├── presentation/
+│   ├── Group8_AI101_Final_Presentation.pdf  # Final Presentation Deck (PDF format)
+│   └── Group8_AI101_Final_Presentation.pptx # Final Presentation Deck (PowerPoint)
 ├── src/
 │   └── main.py                             # Standalone command-line execution script
 ├── Used_Car_Price_Prediction.ipynb         # Interactive Jupyter Notebook walkthrough
@@ -31,6 +38,17 @@ ai101-mini-project/
 ├── .gitignore                              # Git exclusion rules
 └── README.md                               # Project documentation & execution guide
 ```
+
+---
+
+## 📽️ Project Presentation & Deliverables
+
+All course deliverables, presentation slides, and team video recordings are accessible below:
+
+- **📹 Video Presentation Recording**: [Google Drive Video Presentation](https://drive.google.com/drive/folders/1I1P9NeZhjE-dGwPRrYZN6H3YxopeLJsu?usp=sharing)  
+  *Comprehensive group walkthrough and presentation recorded by the team.*
+- **📑 Presentation Slide Deck (PDF)**: [`presentation/Group8_AI101_Final_Presentation.pdf`](presentation/Group8_AI101_Final_Presentation.pdf)
+- **📊 Presentation Slide Deck (PowerPoint)**: [`presentation/Group8_AI101_Final_Presentation.pptx`](presentation/Group8_AI101_Final_Presentation.pptx)
 
 ---
 
