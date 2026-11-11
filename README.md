@@ -82,11 +82,6 @@ python src/main.py
 ```
 > The script will clean the data, train the model, display all metrics in the terminal, and save/update the diagnostic charts in the `output/` folder.
 
-### 5. (Optional) Run the Interactive Jupyter Notebook
-```bash
-jupyter notebook Used_Car_Price_Prediction.ipynb
-```
-
 ---
 
 ## 🔬 Methodology & Pipeline Architecture
